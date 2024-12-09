@@ -88,7 +88,7 @@ export default function Home({ data }: { data: any }) {
         <Text variant="h1">Goal Bet Tracker</Text>
         <Text variant="description">Tracking goals by Nylander, Draisaitl, and Reinhart, to track a bet. The bet resolves if a player scores at the right time:</Text>
         <Text variant="body">W. Nylander in the 2nd, from 5:00 - 9:59</Text>
-        <Text variant="body">S. Reinhart in the 1st, from 0:00 - 4:59</Text>
+        <Text variant="body">S. Reinhart in the 1st, from 15:00 - 19:59</Text>
         <Text variant="body">L. Draisaitl in OT (from 0:00 - 4:59, if this lasts until playoffs)</Text>
       </section>
       <section className="grid gap-6 mt-10 pt-10 border-t border-gray-300">
