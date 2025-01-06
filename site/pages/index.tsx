@@ -4,44 +4,6 @@ import Head from 'next/head'
 import fs from 'fs';
 import path from 'path';
 
-const intervals = [
-  {
-    id: '1m',
-    name: 'Every Minute',
-    cron: '* * * * *',
-  },
-  {
-    id: '10m',
-    name: 'Every 10 mins',
-    cron: '*/10 * * * *',
-  },
-  {
-    id: '1h',
-    name: 'Every Hour',
-    cron: '0 * * * *',
-  },
-  {
-    id: '12h',
-    name: 'Every 12 hours',
-    cron: '0 */12 * * *',
-  },
-  {
-    id: '1d',
-    name: 'Every Day',
-    cron: '0 0 * * *',
-  },
-  {
-    id: '1w',
-    name: 'Every Week',
-    cron: '0 0 * * 0',
-  },
-  {
-    id: '1mo',
-    name: 'Every Month',
-    cron: '0 0 1 * *',
-  },
-]
-
 const GamesPlayed = ({ counts } : any) => (
   <div className="flex space-x-4">
     <div className="p-4"><Text variant="description">Games played:</Text></div>
@@ -72,7 +34,7 @@ const Game = ({ game } : any) => {
             <p>{goal.period}</p>
             <p>{goal.time}</p>
             <p>-</p>
-            <p>{goal.player}</p>
+            <p>{goal.player} ({goal.goalsToDate})</p>
           </div>
         ))}
       </div>
@@ -86,10 +48,10 @@ export default function Home({ data }: { data: any }) {
     <Page>
       <section className="flex flex-col gap-6">
         <Text variant="h1">Goal Bet Tracker</Text>
-        <Text variant="description">Tracking goals by Nylander, Draisaitl, and Reinhart, to track a bet. The bet resolves if a player scores at the right time:</Text>
-        <Text variant="body">W. Nylander in the 2nd, from 5:00 - 9:59</Text>
-        <Text variant="body">S. Reinhart in the 1st, from 15:00 - 19:59</Text>
-        <Text variant="body">L. Draisaitl in OT (from 0:00 - 4:59, if this lasts until playoffs)</Text>
+        <Text variant="description">Tracking goals to settle a bet. The bet settles if any of the following pairs score on the same night:</Text>
+        <Text variant="body">Draisaitl and Matthews</Text>
+        <Text variant="body">Nylander and Point</Text>
+        <Text variant="body">Kaprizov and Caufield</Text>
       </section>
       <section className="grid gap-6 mt-10 pt-10 border-t border-gray-300">
         <div className="flex flex-col gap-12">

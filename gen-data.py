@@ -7,8 +7,8 @@ from collections import defaultdict
 # Constants
 START_DATE = sys.argv[1]
 END_DATE = sys.argv[2]
-TEAMS = ["TOR", "FLA", "EDM"]
-PLAYERS = ["W. Nylander", "S. Reinhart", "L. Draisaitl" ]
+TEAMS = ["TOR", "TBL", "MIN", "EDM", "MTL"]
+PLAYERS = ["W. Nylander", "A. Matthews", "L. Draisaitl", "K. Kaprizov", "B. Point", "C. Caufield" ]
 SCHED_URL = "https://api-web.nhle.com/v1/schedule/{}"
 GAME_URL = "https://api-web.nhle.com/v1/wsc/game-story/{}"
 DATE_FORMAT = "%Y-%m-%d"
@@ -50,7 +50,8 @@ PDESC = {
     "1": "1st",
     "2": "2nd",
     "3": "3rd",
-    "4": "OT"
+    "4": "OT",
+    "5": "SO"
 }
 
 def game_summary(game_id):
@@ -63,7 +64,7 @@ def game_summary(game_id):
         for goal in period.get("goals", []):
             name = goal.get("name", {}).get("default", "")
             if name in PLAYERS:
-                goals.append({"period": PDESC[pnum], "time": goal["timeInPeriod"], "player": name})
+                goals.append({"period": PDESC[pnum], "time": goal["timeInPeriod"], "player": name, "goalsToDate": goal.get("goalsToDate")})
 
     away = story["awayTeam"]
     home = story["homeTeam"]
