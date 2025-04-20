@@ -7,8 +7,20 @@ from collections import defaultdict
 # Constants
 START_DATE = sys.argv[1]
 END_DATE = sys.argv[2]
-TEAMS = ["TOR", "TBL", "MIN", "EDM", "MTL"]
-PLAYERS = ["W. Nylander", "A. Matthews", "L. Draisaitl", "K. Kaprizov", "B. Point", "C. Caufield" ]
+TEAM_PICKS = {
+    "Sean": ["WPG", "VGK", "EDM", "WSH", "FLA"],
+    "Paul": ["TBL", "CAR", "VGK", "COL", "FLA"], 
+    "Lovina": ["EDM", "TOR", "COL", "WPG", "CAR"]
+}
+
+PLAYER_PICKS = {
+    "Sean": ["C. McDavid", "L. Draisaitl", "N. MacKinnon", "K. Connor", "J. Eichel"],
+    "Paul": ["N. Kucherov", "B. Point", "J. Eichel", "N. MacKinnon", "C. Makar"],
+    "Lovina": ["C. McDavid", "N. MacKinnon", "L. Draisaitl", "K. Connor", "N. Kucherov"]
+}
+
+TEAMS = set(team for picks in TEAM_PICKS.values() for team in picks)
+PLAYERS = set(player for picks in PLAYER_PICKS.values() for player in picks)
 SCHED_URL = "https://api-web.nhle.com/v1/schedule/{}"
 GAME_URL = "https://api-web.nhle.com/v1/wsc/game-story/{}"
 DATE_FORMAT = "%Y-%m-%d"
@@ -18,7 +30,7 @@ def fetch(url):
     if response.status_code == 200:
         return response.json()
     else:
-        raise f"Error fetching data for {date}: {response.status_code}"
+        raise f"Error fetching data for {url}: {response.status_code}"
 
 def filter_games_by_teams(schedule, teams):
     """Filter games involving specific teams."""
@@ -46,14 +58,6 @@ def relevant_game_ids():
 
     return all_game_ids
 
-PDESC = {
-    "1": "1st",
-    "2": "2nd",
-    "3": "3rd",
-    "4": "OT",
-    "5": "SO"
-}
-
 def game_summary(game_id):
     story = fetch(GAME_URL.format(game_id))
 
@@ -62,6 +66,7 @@ def game_summary(game_id):
     for period in story.get("summary", {}).get("scoring", []):
         pnum = str(period["periodDescriptor"]["number"])
         for goal in period.get("goals", []):
+            print(goal)
             name = goal.get("name", {}).get("default", "")
             if name in PLAYERS:
                 goals.append({"period": PDESC[pnum], "time": goal["timeInPeriod"], "player": name, "goalsToDate": goal.get("goalsToDate")})
