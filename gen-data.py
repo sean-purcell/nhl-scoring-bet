@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-# Constants
+# constants
 START_DATE = sys.argv[1]
 END_DATE = sys.argv[2]
 TEAM_PICKS = {
@@ -24,6 +24,14 @@ PLAYERS = set(player for picks in PLAYER_PICKS.values() for player in picks)
 SCHED_URL = "https://api-web.nhle.com/v1/schedule/{}"
 GAME_URL = "https://api-web.nhle.com/v1/wsc/game-story/{}"
 DATE_FORMAT = "%Y-%m-%d"
+
+PDESC = {
+    "1": "1st",
+    "2": "2nd",
+    "3": "3rd",
+    "4": "OT",
+    "5": "SO"
+}
 
 def fetch(url):
     response = requests.get(url)
@@ -66,10 +74,16 @@ def game_summary(game_id):
     for period in story.get("summary", {}).get("scoring", []):
         pnum = str(period["periodDescriptor"]["number"])
         for goal in period.get("goals", []):
-            print(goal)
-            name = goal.get("name", {}).get("default", "")
-            if name in PLAYERS:
-                goals.append({"period": PDESC[pnum], "time": goal["timeInPeriod"], "player": name, "goalsToDate": goal.get("goalsToDate")})
+            scorer = goal.get("name", {}).get("default", "")
+            assists = [assist.get("name", {}).get("default", "") for assist in goal.get("assists", [])]
+            players = [(scorer, scorer in PLAYERS)] + [(assist, assist in PLAYERS) for assist in assists]
+            
+            if any(relevant for _, relevant in players):
+                goals.append({
+                    "period": PDESC[pnum],
+                    "time": goal["timeInPeriod"],
+                    "players": players,
+                })
 
     away = story["awayTeam"]
     home = story["homeTeam"]
@@ -81,35 +95,45 @@ def game_summary(game_id):
     else:
         scores = None
 
+    winner = None
+    if story["gameState"] == "OFF":
+        if scores[0] > scores[1]:
+            winner = away["abbrev"]
+        else:
+            winner = home["abbrev"]
+
     return {
         "date": story["gameDate"],
         "id": game_id,
         "names": [name(away), name(home)],
         "abbrevs": [away["abbrev"], home["abbrev"]],
         "scores": scores,
-        "goals": goals
+        "goals": goals,
+        "winner": winner,
     }
 
 def main():
-    games = relevant_game_ids()
-    dates = defaultdict(list)
+    team_wins = defaultdict(int)
+    player_points = defaultdict(int)
+    games = []
     for game in relevant_game_ids():
         summary = game_summary(game)
-        dates[summary["date"]].append(summary)
+        games.append(summary)
+        winner = summary["winner"]
+        if winner is not None:
+            team_wins[winner] += 1
+        for goal in summary["goals"]:
+            for (player, relevant) in goal["players"]:
+                if relevant:
+                    player_points[player] += 1
 
-    gamesPlayed = { team: 0 for team in TEAMS }
-    result = []
-    for (date, games) in sorted(dates.items()):
-        for game in games:
-            for team in TEAMS:
-                if team in game["abbrevs"]:
-                    gamesPlayed[team] += 1
-        played = list(gamesPlayed.items())
-        result.append({"date": date, "played": played, "games": games})
-        started = any(x["scores"] is not None for x in games)
-        if not started:
-            break
-    print(json.dumps(result))
+    output = {
+        "games": games,
+        "team_wins": team_wins,
+        "player_points": player_points,
+    }
+
+    print(json.dumps(output))
 
 if __name__ == "__main__":
     main()
