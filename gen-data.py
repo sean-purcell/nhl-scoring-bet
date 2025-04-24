@@ -8,15 +8,15 @@ from collections import defaultdict
 START_DATE = sys.argv[1]
 END_DATE = sys.argv[2]
 TEAM_PICKS = {
-    "Sean": ["WPG", "VGK", "EDM", "WSH", "FLA"],
-    "Paul": ["TBL", "CAR", "VGK", "COL", "FLA"], 
-    "Lovina": ["EDM", "TOR", "COL", "WPG", "CAR"]
+    "Lovina": ["CAR", "COL", "EDM", "TOR", "WPG"],
+    "Paul": ["CAR", "COL", "FLA", "TBL", "VGK"],
+    "Sean": ["EDM", "FLA", "VGK", "WSH", "WPG"],
 }
 
 PLAYER_PICKS = {
-    "Sean": ["C. McDavid", "L. Draisaitl", "N. MacKinnon", "K. Connor", "J. Eichel"],
-    "Paul": ["N. Kucherov", "B. Point", "J. Eichel", "N. MacKinnon", "C. Makar"],
-    "Lovina": ["C. McDavid", "N. MacKinnon", "L. Draisaitl", "K. Connor", "N. Kucherov"]
+    "Lovina": ["C. McDavid", "K. Connor", "L. Draisaitl", "N. Kucherov", "N. MacKinnon"],
+    "Paul": ["B. Point", "C. Makar", "J. Eichel", "N. Kucherov", "N. MacKinnon"], 
+    "Sean": ["C. McDavid", "J. Eichel", "K. Connor", "L. Draisaitl", "N. MacKinnon"],
 }
 
 TEAMS = set(team for picks in TEAM_PICKS.values() for team in picks)
@@ -113,24 +113,33 @@ def game_summary(game_id):
     }
 
 def main():
+    dates = defaultdict(list)
     team_wins = defaultdict(int)
     player_points = defaultdict(int)
     games = []
     for game in relevant_game_ids():
         summary = game_summary(game)
-        games.append(summary)
+        dates[summary["date"]].append(summary)
         winner = summary["winner"]
         if winner is not None:
-            team_wins[winner] += 1
+            if winner in TEAMS:
+                team_wins[winner] += 1
         for goal in summary["goals"]:
             for (player, relevant) in goal["players"]:
                 if relevant:
                     player_points[player] += 1
 
+    people = []
+    for person in TEAM_PICKS:
+        wins = sum(team_wins[team] for team in TEAM_PICKS[person])
+        points = sum(player_points[player] for player in PLAYER_PICKS[person])
+        people.append({"name": person, "wins": wins, "points": points, "total": 2*wins + points})
+
     output = {
-        "games": games,
-        "team_wins": team_wins,
-        "player_points": player_points,
+        "games": list({ "date": date, "games": games} for (date, games) in sorted(dates.items())),
+        "team_wins": list({"team": team, "wins": wins} for (team, wins) in sorted(team_wins.items())),
+        "player_points": list({"player": player, "points": points} for (player, points) in sorted(player_points.items())),
+        "people": people,
     }
 
     print(json.dumps(output))
