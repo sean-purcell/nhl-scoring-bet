@@ -119,6 +119,8 @@ def main():
     games = []
     for game in relevant_game_ids():
         summary = game_summary(game)
+        if summary["date"] > END_DATE:
+            continue
         dates[summary["date"]].append(summary)
         winner = summary["winner"]
         if winner is not None:
